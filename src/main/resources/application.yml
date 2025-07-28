@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: shipit
+
+ # 데이터베이스 연결
+  datasource:
+    url: jdbc:log4jdbc:mysql://localhost:3306/shipit?serverTimezone=UTC&characterEncoding=UTF-8
+    username: root
+    password: blossom913@
+    driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+
+ # JPA 설정
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    show-sql: true
+    format-sql: true
+    hibernate:
+      ddl-auto: create
+
+  # 이메일 인증
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: workingsg913@gmail.com
+    password: lbxr vwer mpkw mwlt
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+# 이메일 인증 시간
+mail:
+  verification:
+    expiration: 300 # 5분
+
+# JWT 관련
+jwt:
+  secret: MySuperJwtSecretKeyThatIsAtLeast256BitsLong0123456789!
+  access-token-expiration-ms: 1800000   # 30분
+  refresh-token-expiration-ms: 1209600000  # 14일

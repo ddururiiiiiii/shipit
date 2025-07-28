@@ -36,10 +36,23 @@ dependencies {
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-	implementation 'org.bgee.log4jdbc-log4j2:log4jdbc-log4j2-jdbc4:1.16' /*로그*/
-	implementation 'org.springframework.boot:spring-boot-starter-data-redis' /*레디스(알람기능)*/
-	implementation 'org.springframework.boot:spring-boot-starter-websocket' /*웹소켓(채팅기능)*/
-	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf' /*타임리프(프론트엔드)*/
+	/*Log*/
+	implementation 'org.bgee.log4jdbc-log4j2:log4jdbc-log4j2-jdbc4:1.16'
+
+	/*Redis (이메일 인증 및 알람)*/
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+	/*WebSocket (채팅)*/
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+	/*Thymeleaf (front-end)*/
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+	/*JWT*/
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+	implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
+	implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 }
 
 tasks.named('test') {
