@@ -1,5 +1,6 @@
 package io.github.seulgi.shipit.user.service;
 
+import io.github.seulgi.shipit.auth.jwt.JwtAuthenticationFilter;
 import io.github.seulgi.shipit.global.error.BaseException;
 import io.github.seulgi.shipit.global.error.UserErrorCode;
 import io.github.seulgi.shipit.user.domain.User;
@@ -21,6 +22,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, String> redisTemplate;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Transactional
     public Long createUser(UserCreateRequest request) {
@@ -82,7 +84,7 @@ public class UserService {
     }
 
     @Transactional
-    public void withdraw(Long userId) {
+    public void withdraw(Long userId, String accessToken) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BaseException(UserErrorCode.USER_NOT_FOUND));
 
@@ -91,5 +93,6 @@ public class UserService {
         }
         user.withdraw();
         redisTemplate.delete("RT:" + userId);
+        jwtAuthenticationFilter.addToBlacklist(accessToken);
     }
 }

@@ -63,9 +63,12 @@ public class UserController {
      * @return
      */
     @DeleteMapping("/me")
-    public ResponseEntity<ApiResponse<Void>> withdraw(@AuthenticationPrincipal CustomUserDetails user) {
-        userService.withdraw(user.getId());
+    public ResponseEntity<ApiResponse<Void>> withdraw(@AuthenticationPrincipal CustomUserDetails user,
+                                                      @RequestHeader("Authorization") String bearerToken) {
+        String accessToken = bearerToken.replace("Bearer ", "");
+        userService.withdraw(user.getId(), accessToken);
         return ResponseEntity.ok(ApiResponse.success(null));
+
     }
 
 }
