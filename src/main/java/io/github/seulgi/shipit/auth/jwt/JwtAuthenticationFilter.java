@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static io.github.seulgi.shipit.global.config.JwtAuthExclusionList.NO_AUTH_URLS;
+
 @RequiredArgsConstructor
 @Component
 @Slf4j
@@ -29,14 +31,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtProvider jwtProvider;
     private final RedisTemplate<String, String> redisTemplate;
     private final CustomUserDetailsService customUserDetailsService;
-
-    // 인증이 필요 없는 URL 목록
-    private static final List<String> NO_AUTH_URLS = List.of(
-            "/api/auth/login",
-            "/api/auth/refresh-token",
-            "/api/users",
-            "/api/email-verification/**"
-    );
 
     private AntPathMatcher pathMatcher = new AntPathMatcher();
 
@@ -81,9 +75,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private String resolveToken(HttpServletRequest request) {
-        String bearer = request.getHeader("Authorization");
-        if (StringUtils.hasText(bearer) && bearer.startsWith("Bearer ")) {
-            return bearer.substring(7);
+        if (request.getCookies() == null) return null;
+        for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+            if ("accessToken".equals(cookie.getName())) {
+                return cookie.getValue();
+            }
         }
         return null;
     }

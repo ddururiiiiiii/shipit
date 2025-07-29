@@ -29,14 +29,14 @@ public class AuthService {
 
     public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new BaseException(UserErrorCode.USER_NOT_FOUND));
+                .orElse(null);
+
+        if (user == null || !passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw new BaseException(UserErrorCode.LOGIN_FAILED);
+        }
 
         if (user.getStatus() == UserStatus.WITHDRAWN) {
             throw new BaseException(UserErrorCode.ALREADY_WITHDRAWN);
-        }
-
-        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new BaseException(UserErrorCode.INVALID_PASSWORD);
         }
 
         String accessToken = jwtProvider.createAccessToken(user.getId(), user.getRole());

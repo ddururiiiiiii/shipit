@@ -2,6 +2,8 @@ package io.github.seulgi.shipit.global.response;
 
 import io.github.seulgi.shipit.global.error.ErrorCode;
 
+import java.util.Map;
+
 public class ApiResponse<T> {
 
     private final boolean success;
@@ -27,6 +29,11 @@ public class ApiResponse<T> {
     public static ApiResponse<?> fail(String code, String message) {
         return new ApiResponse<>(false, code, message, null);
     }
+
+    public static <T> ApiResponse<T> fail(String code, String message, T data) {
+        return new ApiResponse<>(false, code, message, data);
+    }
+
 
     public boolean isSuccess() {
         return success;

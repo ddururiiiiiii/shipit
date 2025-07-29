@@ -2,6 +2,7 @@ package io.github.seulgi.shipit.user.service;
 
 import io.github.seulgi.shipit.auth.jwt.JwtAuthenticationFilter;
 import io.github.seulgi.shipit.global.error.BaseException;
+import io.github.seulgi.shipit.global.error.FieldValidationException;
 import io.github.seulgi.shipit.global.error.UserErrorCode;
 import io.github.seulgi.shipit.user.domain.User;
 import io.github.seulgi.shipit.user.domain.UserStatus;
@@ -15,6 +16,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -26,9 +30,9 @@ public class UserService {
 
     @Transactional
     public Long createUser(UserCreateRequest request) {
+        validateCreateRequest(request);
+
         String email = request.email();
-        validateEmailVerified(email);
-        validateDuplicateEmail(email);
 
         User user = User.create(
                 request.username(),
@@ -39,8 +43,47 @@ public class UserService {
         );
 
         userRepository.save(user);
-        redisTemplate.delete("email:verified:" + email);
+        redisTemplate.delete(buildEmailVerifiedKey(email));
         return user.getId();
+    }
+
+    private void validateCreateRequest(UserCreateRequest request) {
+        Map<String, String> errors = new HashMap<>();
+
+        if (request.username() == null || request.username().isBlank()) {
+            errors.put("username", "이름을 입력해주세요.");
+        }
+
+        if (request.team() == null) {
+            errors.put("team", "팀을 선택해주세요.");
+        }
+
+        if (request.role() == null) {
+            errors.put("role", "권한을 선택해주세요.");
+        }
+
+        String email = request.email();
+        if (email == null || email.isBlank()) {
+            errors.put("email", "이메일을 입력해주세요.");
+        } else {
+            if (!isEmailVerified(email)) {
+                errors.put("email", UserErrorCode.EMAIL_NOT_VERIFIED.getMessage());
+            }
+            if (isDuplicateEmail(email)) {
+                errors.put("email", UserErrorCode.DUPLICATE_EMAIL.getMessage());
+            }
+        }
+
+        String password = request.password();
+        if (password == null || password.isBlank()) {
+            errors.put("password", "비밀번호를 입력해주세요.");
+        } else if (isWeakPassword(password)) {
+            errors.put("password", UserErrorCode.WEAK_PASSWORD.getMessage());
+        }
+
+        if (!errors.isEmpty()) {
+            throw new FieldValidationException("VALIDATION_ERROR", "입력값이 유효하지 않습니다.", errors);
+        }
     }
 
     public UserResponse getMyInfo(Long userId) {
@@ -66,17 +109,13 @@ public class UserService {
         user.changeRole(request.role());
     }
 
-    private void validateEmailVerified(String email) {
+    private boolean isEmailVerified(String email) {
         String verified = redisTemplate.opsForValue().get(buildEmailVerifiedKey(email));
-        if (!"true".equals(verified)) {
-            throw new BaseException(UserErrorCode.EMAIL_NOT_VERIFIED);
-        }
+        return "true".equals(verified);
     }
 
-    private void validateDuplicateEmail(String email) {
-        if (userRepository.existsByEmail(email)) {
-            throw new BaseException(UserErrorCode.DUPLICATE_EMAIL);
-        }
+    private boolean isDuplicateEmail(String email) {
+        return userRepository.existsByEmail(email);
     }
 
     private String buildEmailVerifiedKey(String email) {
@@ -94,5 +133,14 @@ public class UserService {
         user.withdraw();
         redisTemplate.delete("RT:" + userId);
         jwtAuthenticationFilter.addToBlacklist(accessToken);
+    }
+
+    private boolean isWeakPassword(String password) {
+        boolean lengthCheck = password.length() >= 8 && password.length() <= 20;
+        boolean hasUpper = password.matches(".*[A-Z].*");
+        boolean hasLower = password.matches(".*[a-z].*");
+        boolean hasDigit = password.matches(".*\\d.*");
+        boolean hasSpecial = password.matches(".*[^a-zA-Z0-9].*");
+        return !(lengthCheck && hasUpper && hasLower && hasDigit && hasSpecial);
     }
 }

@@ -8,12 +8,16 @@ public enum UserErrorCode implements ErrorCode {
     EMAIL_SEND_FAIL("U002", "이메일 전송에 실패했습니다."),
     EMAIL_NOT_VERIFIED("U003", "이메일 인증이 완료되지 않았습니다."),
     DUPLICATE_EMAIL("U004", "이미 사용 중인 이메일입니다."),
+    LOGIN_FAILED("U005", "아이디 또는 비밀번호가 일치하지 않습니다."),
 
+    WEAK_PASSWORD("U006", "8~20자 이내 영문 대/소문자, 숫자, 특수문자가 모두 포함되어야 합니다."),
     USER_NOT_FOUND("U010", "사용자를 찾을 수 없습니다."),
     INVALID_PASSWORD("U011", "비밀번호가 일치하지 않습니다."),
     ALREADY_WITHDRAWN("U012","이미 탈퇴한 회원입니다."),
 
     INVALID_TOKEN("401", "유효하지 않은 토큰입니다.");
+
+
 
     private final String code;
     private final String message;
@@ -30,4 +34,5 @@ public enum UserErrorCode implements ErrorCode {
     public String getMessage() {
         return message;
     }
+
 }

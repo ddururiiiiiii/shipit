@@ -7,6 +7,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,8 +24,14 @@ public class EmailVerificationController {
     }
 
     @GetMapping("/verify")
-    public ResponseEntity<ApiResponse<?>> verifyEmail(@RequestParam("token") String token) {
-        emailVerificationService.verifyEmailToken(token);
-        return ResponseEntity.ok(ApiResponse.success("이메일 인증이 완료되었습니다."));
+    public String verifyEmail(@RequestParam("token") String token) {
+        boolean isValid = emailVerificationService.isTokenValid(token);
+        return isValid ? "verify-result" : "email-verification-fail";
+    }
+
+    @GetMapping("/check")
+    public ResponseEntity<ApiResponse<Boolean>> checkEmailVerified(@RequestParam("email") String email) {
+        boolean isVerified = emailVerificationService.isEmailVerified(email);
+        return ResponseEntity.ok(ApiResponse.success(isVerified));
     }
 }

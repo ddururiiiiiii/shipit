@@ -34,16 +34,27 @@ public class EmailVerificationService {
         emailSender.sendEmail(email, subject, content);
     }
 
-    public void verifyEmailToken(String token) {
-        String key = buildRedisKey(token);
+    public boolean isTokenValid(String token) {
+        String key = "email:verify:" + token;
         String email = redisTemplate.opsForValue().get(key);
 
         if (email == null) {
-            throw new BaseException(UserErrorCode.INVALID_EMAIL_TOKEN);
+            return false;
+        }
+
+        String verifiedKey = "email:verified:" + email;
+        if ("true".equals(redisTemplate.opsForValue().get(verifiedKey))) {
+            return false;
         }
 
         redisTemplate.opsForValue().set("email:verified:" + email, "true");
         redisTemplate.delete(key);
+        return true;
+    }
+
+    public boolean isEmailVerified(String email) {
+        String value = redisTemplate.opsForValue().get("email:verified:" + email);
+        return "true".equals(value);
     }
 
     private String buildRedisKey(String token) {
